@@ -36,10 +36,8 @@ function hyphenate(word) {
 }
 
 function fmt(width, paragraph) {
-    let Space_left = width
-    const space_width = 1
-
     let calc = (space_left, word) => {
+        const space_width = 1
         let parts = hyphenate(word)
         let small = parts.filter( v => (v.chunk.length + space_width) < space_left)[0]
         if (small) {            // fits in
@@ -53,6 +51,7 @@ function fmt(width, paragraph) {
 
     let fmt_paragraph = []
     let word, words = paragraph.split(/\s+/).reverse()
+    let Space_left = width
     while ( (word = words.pop())) {
         let r = calc(Space_left, word)
         Space_left = r.space_left
