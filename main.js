@@ -20,34 +20,56 @@ async function* paragraphs() {
     yield p.join` `
 }
 
-// SpaceLeft := LineWidth
-// for each Word in Text
-//     if (Width(Word) + SpaceWidth) > SpaceLeft
-//         insert line break before Word in Text
-//         SpaceLeft := LineWidth - Width(Word)
-//     else
-//         SpaceLeft := SpaceLeft - (Width(Word) + SpaceWidth)
-function fmt(width, para) {
-    let space_left = width
-    let space_width = 1
-    let p = []
-    for (let word of para.split(/\s+/)) {
-        if ((word.length + space_width) > space_left) {
-            if (p.length) p.push("\n")
-            space_left = width - word.length
-        } else {
-            space_left = space_left - (word.length + space_width)
+let Hypher = require('hypher')
+let lang = require('hyphenation.en-us')
+let h_engine = new Hypher(lang)
+
+function hyphenate(word) {
+    let parts = h_engine.hyphenate(word)
+    return parts.map( (v, idx) => {
+        return {
+            chunk: parts.slice(0, idx).join`` + v
+                + (idx === parts.length-1 ? '' : '-'),
+            leftover: parts.slice(idx+1).join``
         }
-        p.push(word)
+    }).reverse()
+}
+
+function fmt(width, paragraph) {
+    let Space_left = width
+    const space_width = 1
+
+    let calc = (space_left, word) => {
+        let parts = hyphenate(word)
+        let small = parts.filter( v => (v.chunk.length + space_width) < space_left)[0]
+        if (small) {            // fits in
+            word = small.chunk
+            space_left = space_left - (word.length + space_width)
+            return { space_left, word, leftover: small.leftover }
+        }
+        // too big
+        return { space_left: width - word.length, word: "\n"+word }
     }
 
-    return p.join` `.replace(/\n /g, "\n")
+    let fmt_paragraph = []
+    let word, words = paragraph.split(/\s+/).reverse()
+    while ( (word = words.pop())) {
+        let r = calc(Space_left, word)
+        Space_left = r.space_left
+        fmt_paragraph.push(r.word)
+
+        // put the 'leftover' of the hyphenated word into the
+        // array-of-words to process it in the next iteration
+        if (r.leftover) words.push(r.leftover)
+    }
+
+    return fmt_paragraph.join` `.replace(/\n /g, "\n").trim()
 }
 
 async function main() {
     let idx = 0
     for await (const para of paragraphs()) {
-        let p = fmt(40, para)
+        let p = fmt(20, para)
         if (idx++ && p.length) console.log("")
         console.log(p)
     }
