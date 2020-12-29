@@ -20,11 +20,12 @@ async function main() {
     }
 }
 
-main()
+if (require.main === module) main()
 
 function mk_hyphen_engine(lang) {
     return new Hypher(require(`hyphenation.${lang}`))
 }
+exports.mk_hyphen_engine = mk_hyphen_engine
 
 async function* paragraphs() {
     let p = []
@@ -47,9 +48,11 @@ function lines() {              // return an async generator
 }
 
 function fmt(conf, paragraph) {
-    let width = conf.width + 2
+    if (conf.width <= 0) throw new Error("fmt width must be > 0")
+    let magic_coeff = 2
+    let width = conf.width + magic_coeff
 
-    let calc = (space_left, word, /* internal check */ _prev_word) => {
+    let calc = (space_left, word) => {
         const space_width = 1
         let parts = hyphenate(conf.hyphen_engine, word)
         let small = parts.filter( v => (v.chunk.length + space_width) < space_left)[0]
@@ -60,28 +63,28 @@ function fmt(conf, paragraph) {
         }
 
         // too big!
-
-        // check if we are furiously trying to hyphenate an
-        // unbreakable word
-        if (_prev_word === word && word.length > width)
-            return { space_left: width - word.length, word }
+        if (word.length > width - magic_coeff) {
+            let fld = fold(space_left - magic_coeff, width - magic_coeff, word)
+            return {
+                space_left: width - (fld.length + space_width),
+                word: (space_left - magic_coeff <= 0 ? "\n" : "")+fld.word
+            }
+        }
 
         return { space_left: width, word: "\n", leftover: word }
     }
 
     let fmt_paragraph = []
-    let word, prev_word, words = paragraph.split(/\s+/).reverse()
+    let word, words = paragraph.split(/\s+/).reverse()
     let Space_left = width
     while ( (word = words.pop())) {
-        let r = calc(Space_left, word,  prev_word)
+        let r = calc(Space_left, word)
         Space_left = r.space_left
         fmt_paragraph.push(r.word)
 
         // put the 'leftover' of the hyphenated word into the
         // array-of-words to process it in the next iteration
         if (r.leftover) words.push(r.leftover)
-
-        prev_word = word
     }
 
     return fmt_paragraph.join` `.replace(/\n /g, "\n")
@@ -97,3 +100,23 @@ function hyphenate(hyphen_engine, word) {
         }
     }).reverse()
 }
+
+exports.hyphenate = hyphenate
+
+function fold(first_chunk_len, chunks_len, word) {
+    let r = []
+    if (first_chunk_len > 0) r.push(word.slice(0, first_chunk_len))
+    if (first_chunk_len < 0) first_chunk_len = 0
+
+    let word2 = word.slice(first_chunk_len)
+    let nchunks = Math.ceil(word2.length / chunks_len)
+    for (let i = 0; i < nchunks; ++i) {
+        r.push(word2.slice(chunks_len*i, chunks_len*(i+1)))
+    }
+    return {
+        word: r.join`\n`,
+        length: (r[r.length-1] || '').length
+    }
+}
+
+exports.fold = fold
