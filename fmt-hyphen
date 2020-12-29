@@ -1,10 +1,29 @@
-let readline = require('readline')
+#!/usr/bin/env node
 
-function lines() {              // return an async generator
-    return readline.createInterface({
-        input: process.stdin,
-        crlfDelay: Infinity
-    })
+let readline = require('readline')
+let Hypher = require('hypher')
+let {program} = require('commander')
+
+async function main() {
+    program
+        .option('-w, --width <number>', 'max line width', Number, 70)
+        .option('-l, --lang <string>', 'hyphenation language pattern', 'en-us')
+    program.parse(process.argv)
+
+    program.hyphen_engine = mk_hyphen_engine(program.lang)
+
+    let idx = 0
+    for await (const para of paragraphs()) {
+        let p = fmt(program, para)
+        if (idx++ && p.length) console.log("")
+        console.log(p)
+    }
+}
+
+main()
+
+function mk_hyphen_engine(lang) {
+    return new Hypher(require(`hyphenation.${lang}`))
 }
 
 async function* paragraphs() {
@@ -20,26 +39,19 @@ async function* paragraphs() {
     yield p.join` `
 }
 
-let Hypher = require('hypher')
-let lang = require('hyphenation.en-us')
-let h_engine = new Hypher(lang)
-
-function hyphenate(word) {
-    let parts = h_engine.hyphenate(word)
-    return parts.map( (v, idx) => {
-        return {
-            chunk: parts.slice(0, idx).join`` + v
-                + (idx === parts.length-1 ? '' : '\u2010'), // a Unicode hyphen
-            leftover: parts.slice(idx+1).join``
-        }
-    }).reverse()
+function lines() {              // return an async generator
+    return readline.createInterface({
+        input: process.stdin,
+        crlfDelay: Infinity
+    })
 }
 
-function fmt(width, paragraph) {
-    width += 2
+function fmt(conf, paragraph) {
+    let width = conf.width + 2
+
     let calc = (space_left, word, /* internal check */ _prev_word) => {
         const space_width = 1
-        let parts = hyphenate(word)
+        let parts = hyphenate(conf.hyphen_engine, word)
         let small = parts.filter( v => (v.chunk.length + space_width) < space_left)[0]
         if (small) {            // fits in
             word = small.chunk
@@ -75,13 +87,13 @@ function fmt(width, paragraph) {
     return fmt_paragraph.join` `.replace(/\n /g, "\n")
 }
 
-async function main() {
-    let idx = 0
-    for await (const para of paragraphs()) {
-        let p = fmt(35, para)
-        if (idx++ && p.length) console.log("")
-        console.log(p)
-    }
+function hyphenate(hyphen_engine, word) {
+    let parts = hyphen_engine.hyphenate(word)
+    return parts.map( (v, idx) => {
+        return {
+            chunk: parts.slice(0, idx).join`` + v
+                + (idx === parts.length-1 ? '' : '\u2010'), // a Unicode hyphen
+            leftover: parts.slice(idx+1).join``
+        }
+    }).reverse()
 }
-
-main()
