@@ -75,7 +75,7 @@ function fmt(conf, paragraph) {
     }
 
     let fmt_paragraph = []
-    let word, words = paragraph.split(/\s+/).reverse()
+    let word, words = paragraph.split(/\s+/).filter(Boolean).reverse()
     let Space_left = width
     while ( (word = words.pop())) {
         let r = calc(Space_left, word)
