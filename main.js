@@ -29,14 +29,15 @@ function hyphenate(word) {
     return parts.map( (v, idx) => {
         return {
             chunk: parts.slice(0, idx).join`` + v
-                + (idx === parts.length-1 ? '' : '-'),
+                + (idx === parts.length-1 ? '' : '\u2010'), // a Unicode hyphen
             leftover: parts.slice(idx+1).join``
         }
     }).reverse()
 }
 
 function fmt(width, paragraph) {
-    let calc = (space_left, word) => {
+    width += 2
+    let calc = (space_left, word, /* internal check */ _prev_word) => {
         const space_width = 1
         let parts = hyphenate(word)
         let small = parts.filter( v => (v.chunk.length + space_width) < space_left)[0]
@@ -45,30 +46,39 @@ function fmt(width, paragraph) {
             space_left = space_left - (word.length + space_width)
             return { space_left, word, leftover: small.leftover }
         }
-        // too big
-        return { space_left: width - word.length, word: "\n"+word }
+
+        // too big!
+
+        // check if we are furiously trying to hyphenate an
+        // unbreakable word
+        if (_prev_word === word && word.length > width)
+            return { space_left: width - word.length, word }
+
+        return { space_left: width, word: "\n", leftover: word }
     }
 
     let fmt_paragraph = []
-    let word, words = paragraph.split(/\s+/).reverse()
+    let word, prev_word, words = paragraph.split(/\s+/).reverse()
     let Space_left = width
     while ( (word = words.pop())) {
-        let r = calc(Space_left, word)
+        let r = calc(Space_left, word,  prev_word)
         Space_left = r.space_left
         fmt_paragraph.push(r.word)
 
         // put the 'leftover' of the hyphenated word into the
         // array-of-words to process it in the next iteration
         if (r.leftover) words.push(r.leftover)
+
+        prev_word = word
     }
 
-    return fmt_paragraph.join` `.replace(/\n /g, "\n").trim()
+    return fmt_paragraph.join` `.replace(/\n /g, "\n")
 }
 
 async function main() {
     let idx = 0
     for await (const para of paragraphs()) {
-        let p = fmt(20, para)
+        let p = fmt(35, para)
         if (idx++ && p.length) console.log("")
         console.log(p)
     }
