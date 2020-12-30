@@ -1,15 +1,17 @@
 #!/usr/bin/env node
 
-let pkg = require('./package.json')
 let readline = require('readline')
+let {execFileSync} = require('child_process')
 let Hypher = require('hypher')
 let {program} = require('commander')
+let pkg = require('./package.json')
 
 async function main() {
     program
         .option('-w, --width <number>', 'max line width', Number, 70)
         .option('-l, --lang <string>', 'hyphenation language pattern', 'en-us')
         .option('--lang-list', 'print supported language patterns')
+        .option('--image <output.png>', 'render text as an image')
     program.parse(process.argv)
 
     if (program.langList) {
@@ -17,7 +19,18 @@ async function main() {
             .filter( v => /^hyphenation\./.test(v))
             .map( v => v.replace(/^hyphenation\./, '')).join`\n`
         console.log(r)
-        process.exit(0)
+        return
+    }
+
+    if (program.image) {        // run 'image.mk' helper
+        try {
+            execFileSync(__dirname + '/' + 'image.mk',
+                         [`w=${program.width}`, `l=${program.lang}`,
+                          program.image], { stdio: 'inherit' })
+        } catch(e) {
+            process.exit(e.status)
+        }
+        return
     }
 
     program.hyphen_engine = mk_hyphen_engine(program.lang)
