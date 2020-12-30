@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+let pkg = require('./package.json')
 let readline = require('readline')
 let Hypher = require('hypher')
 let {program} = require('commander')
@@ -8,7 +9,16 @@ async function main() {
     program
         .option('-w, --width <number>', 'max line width', Number, 70)
         .option('-l, --lang <string>', 'hyphenation language pattern', 'en-us')
+        .option('--lang-list', 'print supported language patterns')
     program.parse(process.argv)
+
+    if (program.langList) {
+        let r = Object.keys(pkg.dependencies)
+            .filter( v => /^hyphenation\./.test(v))
+            .map( v => v.replace(/^hyphenation\./, '')).join`\n`
+        console.log(r)
+        process.exit(0)
+    }
 
     program.hyphen_engine = mk_hyphen_engine(program.lang)
 
