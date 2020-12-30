@@ -1,13 +1,14 @@
 # fmt-hyphen
 
 A text formatter akin to [fmt(1)][] but with hyphenation support. Can
-output images as well.
+output images as well. Folds long words as a last resort only.
 
 [fmt(1)]: https://manpages.debian.org/unstable/coreutils/fmt.1.en.html
 
     $ head -200 moby-dick.txt | fmt-hyphen -w30 --image 1.png
 
-produces a long, narrow .png:
+produces a long, narrow .png (this is a preview in
+com.google.android.apps.photos):
 
 <img src='moby-dick.png' alt=''>
 
@@ -18,7 +19,7 @@ Could be used to share hot takes on twitter w/o using twitter
 
     $ npm i -g fmt-hyphen
 
-Tested on node 15.5.0.
+Tested on node 15.5.0, f33.
 
 ## Usage
 
@@ -42,7 +43,7 @@ a way I have of driving off
 the spleen and
 ~~~
 
-Print supported language patterns:
+Print supported language patterns (`-l` option to select):
 
 ~~~
 $ ./fmt-hyphen --lang-list | column
