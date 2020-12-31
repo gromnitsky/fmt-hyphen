@@ -123,7 +123,7 @@ function fmt(conf, paragraph) {
         if (r.leftover) words.push(r.leftover)
     }
 
-    return fmt_paragraph.join` `.replace(/\n /g, "\n")
+    return fmt_paragraph.join` `.replace(/ ?\n /g, "\n")
 }
 
 function hyphenate(hyphen_engine, word) {
