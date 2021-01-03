@@ -95,7 +95,11 @@ function fmt(conf, paragraph) {
         if (small) {            // fits in
             word = small.chunk
             space_left = space_left - (word.length + space_width)
-            return { space_left, word, leftover: small.leftover }
+            if (small.leftover) return {
+                space_left: width, word: word+"\n",
+                leftover: small.leftover
+            }
+            return { space_left, word }
         }
 
         // too big!
