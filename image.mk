@@ -13,7 +13,7 @@ SHELL := bash -o pipefail
 
 images := $(tmp).images
 $(images):
-	$(mk)/fmt-hyphen -w$(w) -l$(l) | paps --font 'Monospace 10' | gs -q -sDEVICE=png16m -dBATCH -dNOPAUSE -r300 -dTextAlphaBits=4 -dGraphicsAlphaBits=4 -sOutputFile=$(tmp)%03d.png -
+	$(mk)/fmt-hyphen -w$(w) -l$(l) | paps --font 'Monospace 10' | gs -q -sDEVICE=pnggray -dBATCH -dNOPAUSE -r300 -dTextAlphaBits=4 -dGraphicsAlphaBits=4 -sOutputFile=$(tmp)%03d.png -
 	touch $@
 	$(MAKE) tmp=$(tmp) -f $(self) $(MAKECMDGOALS)
 
