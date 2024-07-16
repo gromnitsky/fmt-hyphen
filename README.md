@@ -47,14 +47,14 @@ Print supported language patterns (`-l` option to select):
 
 ~~~
 $ ./fmt-hyphen --lang-list | column
-be              en-us           hy              nl              sv
-bn              es              it              or              ta
-ca              fi              kn              pa              te
-cs              fr              la              pl              tr
-da              grc             lt              pt              uk
-de              gu              lv              ru
-el-monoton      hi              ml              sk
-el-polyton      hu              nb-no           sl
+be              en-us           hy              nl              ta
+bn              es              it              or              te
+ca              fi              kn              pa              tr
+cs              fr              la              pl              uk
+da              grc             lt              pt
+de              gu              lv              sk
+el-monoton      hi              ml              sl
+el-polyton      hu              nb-no           sv
 ~~~
 
 ## License
