@@ -1,5 +1,5 @@
 {
-    "version": "0.0.2",
+    "version": "0.0.3",
     "name": "fmt-hyphen",
     "author": "Alexander Gromnitsky",
     "license": "MIT",
@@ -48,7 +48,6 @@
         "hyphenation.pa": "~0.2.1",
         "hyphenation.pl": "~0.2.1",
         "hyphenation.pt": "~0.2.1",
-        "hyphenation.ru": "~0.2.1",
         "hyphenation.sk": "~0.2.1",
         "hyphenation.sl": "~0.2.1",
         "hyphenation.sv": "~0.2.1",
